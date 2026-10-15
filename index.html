@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#087f5b">
+<meta name="description" content="KhetMap Uttarakhand is a free GPS area measurement tool for mapping farm plots and estimating land area.">
+<link rel="icon" type="image/png" href="khetmap-logo.png">
+<title>KhetMap Uttarakhand — GPS Area Measurement Tool</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+:root{--green:#087f5b;--green-dark:#066348;--green2:#e8f7ef;--ink:#19332b;--muted:#64776f;--line:#dcebe3;--paper:#fff;--bg:#f4faf7;--mint:#e8f7f0;--blue:#eaf4ff;--blue-ink:#245c8f;--coral:#fff0ed;--coral-ink:#a33d32}
+*{box-sizing:border-box}body{margin:0;font:15px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(115deg,#087f5b,#11966d);color:white;padding:10px 14px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 3px 12px #075c431c}
+.brandlockup{display:flex;align-items:center;gap:10px;min-width:0}.brandlogo{width:52px;height:52px;object-fit:cover;border-radius:50%;background:#fff;border:2px solid #d7f5e4;flex-shrink:0}.brand{font-size:18px;font-weight:800;letter-spacing:.1px;line-height:1.2}.sub{font-size:11px;opacity:.92;margin-top:3px;letter-spacing:.1px}
+button,select,input{font:inherit}button svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round;vertical-align:middle;flex-shrink:0}button{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid transparent;border-radius:10px;padding:8px 10px;background:var(--green);color:#fff;font-size:13px;line-height:1.25;font-weight:650;cursor:pointer;transition:background .15s,border-color .15s,transform .15s}
+button:hover{filter:brightness(.98)}button:active{transform:translateY(1px)}button.secondary{background:var(--blue);color:var(--blue-ink);border-color:#d6e8fb}button.warn{background:var(--coral);color:var(--coral-ink);border-color:#f7d6d0}
+button:disabled{opacity:.45;cursor:not-allowed}.lang{background:#fff;color:var(--green-dark);padding:7px 9px;font-size:12px;border-color:#d7f5e4;white-space:nowrap}
+main{max-width:900px;margin:auto;padding:12px;display:grid;gap:12px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:13px;box-shadow:0 2px 8px #142b1b08}
+h2{font-size:16px;margin:0 0 10px}.hint{font-size:12px;color:var(--muted);line-height:1.45}
+.controls{display:flex;flex-wrap:wrap;gap:7px}.controls button{flex:1;min-width:105px}.controls button span{min-width:0}.mapwrap{position:relative}.maptip{position:absolute;z-index:500;top:9px;left:9px;background:#fffef2ed;border:1px solid #e7dfb2;padding:7px 9px;border-radius:9px;font-size:12px;max-width:72%;pointer-events:none}.addpoints{position:absolute;z-index:600;right:9px;top:9px;display:inline-flex;align-items:center;gap:5px;padding:8px 10px;border-radius:10px;background:#fff;color:#087f5b;border:1px solid #b9e7d0;box-shadow:0 2px 10px #092f201f;font-size:12px;font-weight:750}.addpoints.active{background:#087f5b;color:#fff;border-color:#087f5b}.addpoints svg{width:18px;height:18px}
+#map{height:44vh;min-height:300px;max-height:520px;border-radius:12px;z-index:1;background:#dfe8df}
+.mapwrap{position:relative}.maptip{position:absolute;z-index:500;top:9px;left:9px;background:#fffef2ed;border:1px solid #e7dfb2;padding:7px 9px;border-radius:9px;font-size:12px;max-width:80%;pointer-events:none}
+.stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.stat{background:var(--green2);border:1px solid #d6efe1;border-radius:12px;padding:11px}.stat small{display:block;color:#426452;font-size:12px}.stat strong{display:block;font-size:19px;margin-top:3px;overflow-wrap:anywhere}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+label{display:block;font-size:12px;color:var(--muted);margin:8px 0 4px}
+input,select{width:100%;border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px;color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:8px 5px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--muted);font-weight:600}
+.badge{display:inline-block;border-radius:999px;background:#eef4ef;padding:4px 8px;font-size:11px;color:#315b42}
+#savedList{display:grid;gap:8px}.saved{border:1px solid var(--line);border-radius:11px;padding:10px;display:flex;justify-content:space-between;gap:8px;align-items:center}.saved>div:first-child{min-width:0;overflow-wrap:anywhere}.saved button{font-size:11px;padding:7px 8px;gap:4px}.saved button svg{width:14px;height:14px}.saved small{display:block;color:var(--muted)}
+footer{text-align:center;padding:4px 12px 20px;color:var(--muted);font-size:11px}
+.hidden{display:none!important}
+@media(max-width:420px){.brand{font-size:15px}.brandlogo{width:44px;height:44px}.sub{font-size:10px}.controls{gap:6px}.controls button{min-width:calc(50% - 6px);font-size:12px;padding:8px 7px}.addpoints{font-size:11px;padding:7px 8px}.maptip{max-width:62%}}
+@media(min-width:760px){main{grid-template-columns:1.15fr .85fr;align-items:start} .map-panel{grid-column:1}.rightcol{grid-column:2;grid-row:1 / span 3}#map{height:65vh}.stats{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<header><div class="brandlockup"><img class="brandlogo" src="khetmap-logo.png" alt="KhetMap logo"><div><div class="brand">KhetMap</div><div class="sub">Uttarakhand GPS Area Measurement Tool</div></div></div><button class="lang" id="langBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg><span>हिंदी</span></button></header>
+<main>
+<section class="panel map-panel">
+  <h2 data-i="mapTitle">Satellite map</h2>
+  <div class="mapwrap"><div id="map"></div><div class="maptip" id="mapTip">Tap + Add points before selecting field corners.</div><button type="button" class="addpoints" id="addPointsBtn" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg><span>Add points</span></button></div>
+  
+<p class="hint" data-i="mapHint">Tap + Add points first, then tap at least 3 field corners and close the boundary. Map imagery needs internet.</p>
+<div class="controls">
+  <button id="locateBtn" class="secondary" data-i="myLoc"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2"/></svg><span>My location</span></button>
+  <button id="closeBtn" class="secondary" data-i="closeBoundary"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6"/><path d="M12 22a10 10 0 1 0-10-10"/></svg><span>Done, measure it</span></button>
+  <button id="undoBtn" class="secondary" data-i="undo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg><span>Erase</span></button>
+  <button id="clearBtn" class="warn" data-i="clear"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg><span>Clear</span></button>
+</div>
+
+</section>
+<section class="panel rightcol">
+  <h2 data-i="areaTitle">Measured area</h2>
+  
+<div class="stats">
+  <div class="stat"><small data-i="hectares">Hectares</small><strong id="ha">0</strong></div>
+  <div class="stat"><small data-i="nali">Nali</small><strong id="nali">0</strong></div>
+</div>
+<div class="row" style="margin-top:8px"><div><label for="naliHa" data-i="naliConversion">Nalis in 1 hectare (editable)</label><input id="naliHa" type="number" min="0.0001" step="0.01" value="49.83" inputmode="decimal"></div></div>
+<p class="hint" data-i="naliHint">Set the local conversion for your district. This setting is used for current and new measurements.</p>
+
+  <div class="row">
+    <div><label for="block" data-i="block">Block</label><input id="block" placeholder="Block name"></div>
+    <div><label for="village" data-i="village">Village</label><input id="village" placeholder="Village name"></div>
+    <div><label for="plot" data-i="plot">Farmer / plot ID</label><input id="plot" placeholder="Optional ID"></div>
+  </div>
+  <label for="notes" data-i="notes">Notes (optional)</label><input id="notes" placeholder="e.g. crop / field reference">
+  <div class="controls" style="margin-top:10px">
+    <button id="saveBtn" data-i="save"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l4 4v14H3V3z"/><path d="M7 3v6h10V3M7 21v-8h10v8"/></svg><span>Save measurement</span></button>
+    <button id="imageBtn" class="secondary" data-i="saveImage"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg><span>Save area image</span></button>
+  </div>
+  <p class="hint" data-i="saveHint">Measurements are stored in this browser on this device. Export a backup to move records to another device.</p>
+</section>
+<section class="panel">
+  <div class="row" style="justify-content:space-between"><h2 data-i="savedTitle">Saved measurements</h2><span class="badge" id="countBadge">0</span></div>
+  <div id="savedList"></div>
+  <div class="controls" style="margin-top:10px"><button id="exportJsonBtn" class="secondary" data-i="exportJson"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M5 17v4h14v-4"/></svg><span>Export saved measurements</span></button><button id="exportCsvBtn" class="secondary" data-i="exportCsv"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M5 17v4h14v-4"/></svg><span>Export Excel file (.csv)</span></button></div>
+  <p class="hint" data-i="noRecords" id="emptyText">No saved measurements yet.</p>
+</section>
+<section class="panel">
+<h2 data-i="accuracyTitle">Accuracy & privacy</h2>
+<p class="hint" data-i="accuracyText">This is an estimate for field planning, not a legal land survey. Satellite imagery can be offset, GPS accuracy varies with phone, weather and tree cover, and boundaries should be checked on the ground. Location is used only while you use the app; saved records remain in local browser storage. No ads or analytics are included in this app code.</p>
+<p class="hint">Satellite basemap attribution: Sources: Esri, DigitalGlobe, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community. Map tiles are loaded online from Esri; imagery and use are subject to applicable terms. Exported map images are intended for internal project reports; do not resell or redistribute imagery separately.</p>
+</section>
+</main>
+<footer>KhetMap · Uttarakhand GPS Area Measurement Tool · Made by Mukesh</footer>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const translations = {
+en:{tagline:"",pointModeOn:"Add points",pointModeOff:"Stop adding",naliConversion:"Nalis in 1 hectare (editable)",mapTitle:"Satellite map",mapTip:"Tap plot corners on the map.",mapHint:"Tap + Add points first, then tap at least 3 field corners and close the boundary. Map imagery needs internet.",myLoc:"My location",closeBoundary:"Done, measure it",undo:"Erase",clear:"Clear",gpsStart:"▶ Start GPS walk",gpsStop:"■ Stop GPS walk",gpsIdle:"GPS walking adds points as you move. Allow location access when prompted.",gpsOn:"GPS walk running — walk safely around the field boundary.",gpsOff:"GPS walk stopped.",areaTitle:"Measured area",sqMeters:"Square metres",hectares:"Hectares",acres:"Acres",nali:"Nali",naliHint:"Enter how many local nalis equal 1 hectare in your area. Used for current and new measurements.",block:"Block",village:"Village",plot:"Farmer / plot ID",notes:"Notes (optional)",save:"Save measurement",saveImage:"Save area image",exportSaved:"Export saved measurements (JSON file)",exportJson:"Export saved measurements (JSON file)",exportCsv:"Export saved measurements (Excel file .csv)",saveHint:"Measurements are stored in this browser on this device. Export a backup to move records to another device.",savedTitle:"Saved measurements",noRecords:"No saved measurements yet.",accuracyTitle:"Accuracy & privacy",accuracyText:"This is an estimate for field planning, not a legal land survey. Satellite imagery can be offset, GPS accuracy varies with phone, weather and tree cover, and boundaries should be checked on the ground. Location is used only while you use the app; saved records remain in local browser storage. No ads or analytics are included in this app code.",needPoints:"Add at least 3 boundary points first.",closed:"Boundary closed.",saved:"Measurement saved.",deleted:"Record deleted.",area:"Area",points:"points",delete:"Delete",load:"Load",confirmClear:"Clear the current boundary?",confirmDelete:"Delete this saved record?",emptyVillage:"Village not specified",emptyPlot:"No plot ID",csvName:"khetmap_uttarakhand_measurements.csv",loaded:"Loaded boundary. Review it before saving."},
+hi:{tagline:"",pointModeOn:"बिंदु जोड़ें",pointModeOff:"बिंदु जोड़ना रोकें",naliConversion:"1 हेक्टेयर में नाली (बदल सकते हैं)",mapTitle:"सैटेलाइट नक्शा",mapTip:"पहले + बिंदु जोड़ें दबाएँ, फिर खेत के कोनों पर टैप करें।",mapHint:"पहले + बिंदु जोड़ें दबाएँ, फिर कम से कम 3 कोनों पर टैप करके सीमा बंद करें। नक्शे के लिए इंटरनेट चाहिए।",myLoc:"मेरी लोकेशन",closeBoundary:"हो गया, मापें",undo:"मिटाएँ",clear:"साफ़ करें",gpsStart:"▶ GPS से चलना शुरू",gpsStop:"■ GPS चलना रोकें",gpsIdle:"चलते हुए GPS बिंदु जोड़ें। पूछे जाने पर लोकेशन की अनुमति दें।",gpsOn:"GPS चालू है — खेत की सीमा के साथ सावधानी से चलें।",gpsOff:"GPS चलना बंद हुआ।",areaTitle:"मापा गया क्षेत्रफल",sqMeters:"वर्ग मीटर",hectares:"हेक्टेयर",acres:"एकड़",nali:"नाली",naliHint:"अपने क्षेत्र के अनुसार 1 हेक्टेयर में कितने नाली होते हैं, भरें। यही मान वर्तमान और नए माप में इस्तेमाल होगा।",block:"ब्लॉक",village:"गाँव",plot:"किसान / प्लॉट ID",notes:"टिप्पणी (वैकल्पिक)",save:"माप सेव करें",saveImage:"क्षेत्रफल की इमेज सेव करें",exportSaved:"सेव माप एक्सपोर्ट करें (JSON फ़ाइल)",exportJson:"सेव माप एक्सपोर्ट करें (JSON फ़ाइल)",exportCsv:"सेव माप एक्सपोर्ट करें (Excel फ़ाइल .csv)",saveHint:"माप इसी डिवाइस के ब्राउज़र में सेव होते हैं। दूसरे डिवाइस पर ले जाने के लिए बैकअप एक्सपोर्ट करें।",savedTitle:"सेव किए गए माप",noRecords:"अभी कोई माप सेव नहीं है।",accuracyTitle:"सटीकता और गोपनीयता",accuracyText:"यह खेत की योजना के लिए अनुमान है, कानूनी भूमि सर्वेक्षण नहीं। सैटेलाइट तस्वीरें वास्तविक सीमा से खिसकी हो सकती हैं और GPS की सटीकता फोन, मौसम व पेड़ों से बदलती है। ज़मीन पर सीमा की पुष्टि करें। लोकेशन केवल ऐप इस्तेमाल करते समय ली जाती है; रिकॉर्ड इसी ब्राउज़र में सेव होते हैं। इस ऐप कोड में विज्ञापन या एनालिटिक्स नहीं हैं।",needPoints:"पहले कम से कम 3 सीमा बिंदु जोड़ें।",closed:"सीमा बंद कर दी गई।",saved:"माप सेव हो गया।",deleted:"रिकॉर्ड हटाया गया।",area:"क्षेत्रफल",points:"बिंदु",delete:"हटाएँ",load:"खोलें",confirmClear:"वर्तमान सीमा साफ़ करें?",confirmDelete:"यह सेव किया गया रिकॉर्ड हटाएँ?",emptyVillage:"गाँव नहीं दिया",emptyPlot:"प्लॉट ID नहीं",csvName:"khetmap_uttarakhand_measurements.csv",loaded:"सीमा खोली गई। सेव करने से पहले जाँच लें।"}
+};
+let lang = localStorage.getItem("khetmap_uk_lang") || "en";
+let points = [], closed = false, pointMode = false, markerLayer, lineLayer, polygonLayer, userLocationMarker;
+const map = L.map("map",{zoomControl:true}).setView([27.6,78.05],14);
+L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:19,attribution:"Imagery Sources: Esri, DigitalGlobe, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, GIS User Community",crossOrigin:true}).addTo(map);
+markerLayer=L.layerGroup().addTo(map);
+lineLayer=L.polyline([],{color:"#ffdb39",weight:4}).addTo(map);
+polygonLayer=L.polygon([],{color:"#176b45",weight:3,fillColor:"#3cc477",fillOpacity:.25}).addTo(map);
+function t(k){return translations[lang][k] || translations.en[k] || k}
+function fmt(n,d=3){return Number(n).toLocaleString(lang==="hi"?"hi-IN":"en-IN",{maximumFractionDigits:d,minimumFractionDigits:0})}
+function applyLang(){document.documentElement.lang=lang;document.querySelectorAll("[data-i]").forEach(el=>{let k=el.getAttribute("data-i");if(k==="mapTip")return;(()=>{const span=el.querySelector("span");if(span)span.textContent=t(k);else el.textContent=t(k)})()});$("mapTip").textContent=pointMode?(lang==="hi"?"अब खेत के कोनों पर टैप करें।":"Now tap the field corners."):t("mapTip");$("langBtn").querySelector("span").textContent=lang==="en"?"हिंदी":"English";updatePointButton();renderSaved();updateArea()}
+function updatePointButton(){const b=$("addPointsBtn");b.classList.toggle("active",pointMode);b.setAttribute("aria-pressed",String(pointMode));b.querySelector("span").textContent=t(pointMode?"pointModeOff":"pointModeOn");}
+function areaSqm(arr){
+ if(arr.length<3)return 0;
+ const R=6378137, lat0=arr.reduce((s,p)=>s+p.lat,0)/arr.length*Math.PI/180;
+ const xy=arr.map(p=>({x:R*p.lng*Math.PI/180*Math.cos(lat0),y:R*p.lat*Math.PI/180}));
+ let s=0;for(let i=0;i<xy.length;i++){let j=(i+1)%xy.length;s+=xy[i].x*xy[j].y-xy[j].x*xy[i].y}return Math.abs(s/2);
+}
+function redraw(){
+ markerLayer.clearLayers();
+ points.forEach((p,i)=>L.circleMarker([p.lat,p.lng],{radius:6,color:"#fff",weight:2,fillColor:"#176b45",fillOpacity:1}).bindTooltip(String(i+1)).addTo(markerLayer));
+ lineLayer.setLatLngs(points.map(p=>[p.lat,p.lng]));
+ polygonLayer.setLatLngs(closed&&points.length>=3?points.map(p=>[p.lat,p.lng]):[]);
+ updateArea();
+}
+function nalisPerHa(){const v=parseFloat($("naliHa").value);return Number.isFinite(v)&&v>0?v:49.83}
+function recordNalisPerHa(rec){return Number(rec.naliPerHa)>0?Number(rec.naliPerHa):(1/(Number(rec.naliHa)||0.020068))}
+function updateArea(){
+ const sqm=closed&&points.length>=3?areaSqm(points):0;
+ $("ha").textContent=fmt(sqm/10000,4);$("nali").textContent=fmt((sqm/10000)*nalisPerHa(),4);
+} 
+$("naliHa").addEventListener("input",updateArea);
+function addPoint(latlng){if(closed){points=[];closed=false}points.push({lat:latlng.lat,lng:latlng.lng});redraw()}
+map.on("click",e=>{if(pointMode)addPoint(e.latlng)});
+$("addPointsBtn").onclick=()=>{pointMode=!pointMode;updatePointButton();$("mapTip").textContent=pointMode?(lang==="hi"?"अब खेत के कोनों पर टैप करें।":"Now tap the field corners."):t("mapTip")};
+$("closeBtn").onclick=()=>{if(points.length<3){alert(t("needPoints"));return}closed=true;pointMode=false;updatePointButton();$("mapTip").textContent=t("mapTip");redraw()};
+$("undoBtn").onclick=()=>{points.pop();closed=false;redraw()};
+$("clearBtn").onclick=()=>{if(confirm(t("confirmClear"))){points=[];closed=false;redraw()}};
+
+function records(){try{return JSON.parse(localStorage.getItem("khetmap_uk_records")||"[]")}catch(e){return []}}
+function storeRecords(r){localStorage.setItem("khetmap_uk_records",JSON.stringify(r))}
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function renderSaved(){
+ let r=records();$("countBadge").textContent=r.length;$("emptyText").classList.toggle("hidden",r.length>0);
+ $("savedList").innerHTML=r.slice().reverse().map(rec=>`<div class="saved"><div><strong>${esc(rec.block||"—")} · ${esc(rec.village||t("emptyVillage"))} · ${esc(rec.plot||t("emptyPlot"))}</strong><small>${esc(rec.date)} · ${fmt(rec.sqm/10000,4)} ha · ${fmt((rec.sqm/10000)*recordNalisPerHa(rec),4)} nali</small></div><div style="display:flex;gap:5px"><button class="secondary" data-load="${esc(rec.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5"/><path d="M4 19h16"/></svg><span>${t("load")}</span></button><button class="warn" data-del="${esc(rec.id)}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6"/></svg><span>${t("delete")}</span></button></div></div>`).join("");
+ $("savedList").querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{if(confirm(t("confirmDelete"))){storeRecords(records().filter(x=>x.id!==b.dataset.del));renderSaved()}});
+ $("savedList").querySelectorAll("[data-load]").forEach(b=>b.onclick=()=>{let rec=records().find(x=>x.id===b.dataset.load);if(rec){points=rec.points||[];closed=points.length>=3; $("block").value=rec.block||"";$("village").value=rec.village||"";$("plot").value=rec.plot||"";$("notes").value=rec.notes||"";$("naliHa").value=recordNalisPerHa(rec);redraw();if(points.length)map.fitBounds(points.map(p=>[p.lat,p.lng]),{padding:[25,25]});alert(t("loaded"))}});
+}
+$("saveBtn").onclick=()=>{
+ if(!closed||points.length<3){alert(t("needPoints"));return}
+ const sqm=areaSqm(points), r=records();
+ r.push({id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),date:new Date().toLocaleString(),block:$("block").value.trim(),village:$("village").value.trim(),plot:$("plot").value.trim(),notes:$("notes").value.trim(),sqm,points:points.map(p=>({lat:p.lat,lng:p.lng})),naliPerHa:nalisPerHa()});
+ try{storeRecords(r);renderSaved();alert(t("saved"))}catch(e){alert(lang==="hi"?"स्टोरेज भर गया है। सेव माप एक्सपोर्ट करें और पुराने रिकॉर्ड हटाएँ।":"Storage is full. Export saved measurements and remove old records.")}
+};
+async function saveBlob(blob, filename){
+ if(window.AndroidSaveFile && typeof window.AndroidSaveFile.saveFile === "function"){
+   const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob)});
+   window.AndroidSaveFile.saveFile(filename,String(dataUrl).split(",")[1],blob.type||"application/octet-stream");
+   return;
+ }
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),2000);
+}
+$("exportJsonBtn").onclick=()=>{
+ const data=records();
+ if(!data.length){alert(lang==="hi"?"एक्सपोर्ट करने के लिए कोई सेव माप नहीं है।":"There are no saved measurements to export yet.");return}
+ const blob=new Blob([JSON.stringify({app:"KhetMap Uttarakhand - GPS Area Measurement",exportedAt:new Date().toISOString(),measurements:data},null,2)],{type:"application/json;charset=utf-8"});
+ saveBlob(blob,"khetmap-uttarakhand-saved-measurements.json").catch(()=>alert("Could not save file. Please try again."));
+};
+$("exportCsvBtn").onclick=()=>{
+ const data=records();
+ if(!data.length){alert(lang==="hi"?"एक्सपोर्ट करने के लिए कोई सेव माप नहीं है।":"There are no saved measurements to export yet.");return}
+ const cols=["block","village","plot","notes","date","area_hectares","nali","nalis_per_hectare","area_sqm","boundary_points"];
+ const quote=v=>{let x=String(v??"");return '"'+x.replace(/"/g,'""')+'"'};
+ const rows=[cols.join(","),...data.map(r=>[r.block,r.village,r.plot,r.notes,r.date,(Number(r.sqm)||0)/10000,((Number(r.sqm)||0)/10000)*recordNalisPerHa(r),recordNalisPerHa(r),r.sqm,JSON.stringify(r.points||[])].map(quote).join(","))];
+ const blob=new Blob(["\ufeff"+rows.join("\r\n")],{type:"text/csv;charset=utf-8"});
+ saveBlob(blob,"khetmap-uttarakhand-saved-measurements.csv").catch(()=>alert("Could not save file. Please try again."));
+};
+
+$("locateBtn").onclick=()=>{
+ if(!navigator.geolocation){alert(lang==="hi"?"इस ब्राउज़र में लोकेशन उपलब्ध नहीं है।":"Location is not supported by this browser.");return}
+ $("locateBtn").disabled=true;
+ navigator.geolocation.getCurrentPosition(pos=>{
+   const ll=[pos.coords.latitude,pos.coords.longitude];
+   map.setView(ll,18);
+   if(userLocationMarker)userLocationMarker.setLatLng(ll);else userLocationMarker=L.circleMarker(ll,{radius:9,color:"#fff",weight:3,fillColor:"#1685ff",fillOpacity:1}).addTo(map).bindTooltip(lang==="hi"?"आपकी लोकेशन":"Your location");
+   $("locateBtn").disabled=false;
+ },err=>{ $("locateBtn").disabled=false; alert(lang==="hi"?"लोकेशन नहीं मिल सकी। GPS चालू करें और ब्राउज़र की अनुमति दें।":"Could not get your location. Turn on location and allow browser permission."); },{enableHighAccuracy:true,timeout:15000,maximumAge:10000});
+};
+
+$("imageBtn").onclick=async()=>{
+ if(!closed||points.length<3){alert(t("needPoints"));return}
+ if(typeof html2canvas!=="function"){alert(lang==="hi"?"सैटेलाइट इमेज सेव करने के लिए इंटरनेट से पेज दोबारा खोलें।":"Reload this page with internet to enable satellite image saving.");return}
+ const sqm=areaSqm(points), ha=sqm/10000, bh=ha*nalisPerHa();
+ const block=$("block").value.trim()||(lang==="hi"?"ब्लॉक नहीं दिया":"Block not specified"), village=$("village").value.trim()||(lang==="hi"?"गाँव नहीं दिया":"Village not specified"), plot=$("plot").value.trim()||(lang==="hi"?"प्लॉट ID नहीं":"No plot ID");
+ const originalMap=$("map"), mapWasHidden=originalMap.offsetWidth===0;
+ if(mapWasHidden)map.invalidateSize();
+ try{
+   map.invalidateSize();
+   const mapCanvas=await html2canvas(originalMap,{useCORS:true,allowTaint:false,backgroundColor:"#e4e9e4",scale:2,logging:false});
+   const canvas=document.createElement("canvas");canvas.width=1200;canvas.height=1450;
+   const ctx=canvas.getContext("2d");ctx.fillStyle="#f3f7f4";ctx.fillRect(0,0,canvas.width,canvas.height);
+   ctx.fillStyle="#087f5b";ctx.fillRect(0,0,1200,130);ctx.fillStyle="#fff";ctx.font="bold 48px system-ui";ctx.fillText("KhetMap Uttarakhand — GPS Area Measurement Tool",50,78);
+   ctx.fillStyle="#fff";ctx.font="20px system-ui";ctx.fillText("Made by Mukesh",52,112);
+   ctx.save();ctx.beginPath();ctx.roundRect(35,155,1130,760,18);ctx.clip();
+   const scale=Math.min(1100/mapCanvas.width,730/mapCanvas.height);const w=mapCanvas.width*scale,h=mapCanvas.height*scale;
+   const drawX=50+(1100-w)/2, drawY=170+(730-h)/2;
+   ctx.drawImage(mapCanvas,drawX,drawY,w,h);
+   // Explicitly draw the selected plot boundary and numbered corner points on top
+   // of the captured map so they remain visible in the exported PNG.
+   const mapScaleX=w/originalMap.clientWidth, mapScaleY=h/originalMap.clientHeight;
+   const screenPts=points.map((p)=>{const q=map.latLngToContainerPoint([p.lat,p.lng]);return {x:drawX+q.x*mapScaleX,y:drawY+q.y*mapScaleY};});
+   ctx.save();
+   ctx.beginPath();screenPts.forEach((q,i)=>{if(i===0)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y)});ctx.closePath();
+   ctx.fillStyle="rgba(60,196,119,0.24)";ctx.fill();ctx.strokeStyle="#ffdf32";ctx.lineWidth=6;ctx.lineJoin="round";ctx.stroke();
+   screenPts.forEach((q,i)=>{
+     ctx.beginPath();ctx.arc(q.x,q.y,18,0,Math.PI*2);ctx.fillStyle="#176b45";ctx.fill();ctx.lineWidth=4;ctx.strokeStyle="#ffffff";ctx.stroke();
+     ctx.fillStyle="#ffffff";ctx.font="bold 20px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(String(i+1),q.x,q.y);
+   });
+   ctx.restore();ctx.restore();
+   ctx.fillStyle="#17231d";ctx.font="bold 28px system-ui";ctx.fillText((lang==="hi"?"ब्लॉक: ":"Block: ")+block,50,965);
+   ctx.fillText((lang==="hi"?"गाँव: ":"Village: ")+village,50,1005);
+   ctx.font="24px system-ui";ctx.fillText((lang==="hi"?"प्लॉट: ":"Plot: ")+plot,50,1045);
+   ctx.fillStyle="#e8f4ed";ctx.fillRect(40,1060,1120,220);
+   ctx.fillStyle="#315b42";ctx.font="22px system-ui";ctx.fillText(lang==="hi"?"क्षेत्रफल":"MEASURED AREA",70,1105);
+   ctx.fillStyle="#087f5b";ctx.font="bold 48px system-ui";ctx.fillText(fmt(ha,4)+" ha",70,1175);ctx.fillText(fmt(bh,4)+" nali",600,1175);
+   ctx.fillStyle="#17231d";ctx.font="20px system-ui";ctx.fillText((lang==="hi"?"1 हेक्टेयर = ":"1 hectare = ")+fmt(nalisPerHa(),4)+(lang==="hi"?" नाली":" nali"),70,1225);
+   ctx.fillStyle="#65736b";ctx.font="18px system-ui";ctx.fillText(lang==="hi"?"अनुमानित माप • कानूनी सर्वेक्षण नहीं":"Estimated measurement · Not a legal survey",50,1320);
+   ctx.font="13px system-ui";
+   ctx.fillText("Imagery sources: Esri, DigitalGlobe, GeoEye, i-cubed, USDA FSA, USGS, AEX, Getmapping, Aerogrid, IGN, IGP, swisstopo, and the GIS User Community.",50,1350);
+   ctx.fillText("Imagery copyright © Esri and its licensors. Use is subject to applicable provider terms.",50,1378);
+   ctx.fillText("For internal project reference. Check provider terms before external sharing or reuse.",50,1406);
+   canvas.toBlob(blob=>{if(!blob){alert(lang==="hi"?"इमेज नहीं बन पाई।":"Could not create image.");return}saveBlob(blob,"khetmap-satellite.png").catch(()=>alert(lang==="hi"?"फ़ाइल सेव नहीं हो सकी।":"Could not save file."))},"image/png");
+ }catch(e){console.error(e);alert(lang==="hi"?"सैटेलाइट इमेज कैप्चर नहीं हो सकी। इंटरनेट चालू करके दोबारा प्रयास करें।":"Could not capture satellite tiles. Check internet and try again; some browsers block map tile capture.")}
+};
+
+$("langBtn").onclick=()=>{lang=lang==="en"?"hi":"en";localStorage.setItem("khetmap_uk_lang",lang);applyLang()};
+applyLang();
+})();
+</script>
+</body>
+</html>
